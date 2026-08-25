@@ -1,0 +1,27 @@
+# Rename to `Caddyfile`, replace the hostname, then:
+#
+#   docker compose --profile tls up -d
+#
+# Caddy obtains and renews a Let's Encrypt certificate by itself. The only requirements are
+# that atelier.example.com resolves to this machine and that ports 80 and 443 reach it.
+#
+# Also set, in .env:
+#   APP_BASE_URL=https://atelier.example.com
+# so invitation and reset links point at the address people use rather than at localhost.
+
+atelier.example.com {
+	# `app` is the compose service name, resolved on the compose network — Caddy reaches it
+	# directly, whether or not the app is also published on the host's loopback address.
+	reverse_proxy app:3000
+
+	# The app trusts X-Forwarded-* (it sets fastify's trustProxy), which is what makes it
+	# mark session cookies Secure and log the real client address. Caddy sets these itself.
+
+	encode zstd gzip
+
+	# Uploads default to 25 MB; keep this at or above ATELIER_MAX_BLOB_BYTES or large files
+	# fail at the proxy with a 413 that the app never sees and cannot explain.
+	request_body {
+		max_size 30MB
+	}
+}

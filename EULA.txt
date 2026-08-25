@@ -1,0 +1,106 @@
+ATELIER — END USER LICENSE AGREEMENT
+
+                    *** DRAFT — NOT YET REVIEWED BY A LAWYER ***
+     Kloomiyin should have counsel review this before the image is made public.
+     It is written to be readable and to say what was actually intended; it is
+     not a substitute for advice from someone qualified to give it.
+
+Version 1.0 — 2026-08-25
+Copyright (c) 2026 Kloomiyin, Inc. All rights reserved.
+
+1. WHAT THIS COVERS
+
+   "Software" means the Atelier container image published by Kloomiyin, Inc.
+   ("Kloomiyin"), including the server, the compiled web application, and the
+   documentation distributed with them.
+
+   By pulling, running, or otherwise using the Software you accept this
+   agreement. If you do not accept it, do not use the Software.
+
+   This agreement does not cover the third-party components redistributed
+   inside the Software. Those are licensed to you by their own authors under
+   their own terms, reproduced in THIRD-PARTY-NOTICES.txt and fonts/ in this
+   same directory. Where those terms conflict with this agreement, they govern
+   their own components.
+
+2. WHAT YOU MAY DO
+
+   Kloomiyin grants you a non-exclusive, worldwide, royalty-free, revocable
+   licence to:
+
+   (a) run any number of instances of the Software on infrastructure you
+       control, for your own internal business or personal purposes;
+   (b) allow your employees, contractors and members of your own organisation
+       to use those instances; and
+   (c) make copies and backups as reasonably needed to do (a) and (b),
+       including of the data those instances hold.
+
+   Your data is yours. Nothing here gives Kloomiyin any right to it, and the
+   Software as distributed sends none of it to Kloomiyin.
+
+3. WHAT YOU MAY NOT DO
+
+   You may not:
+
+   (a) offer the Software to third parties as a hosted or managed service,
+       whether paid or unpaid;
+   (b) sell, rent, sublicense, or redistribute the Software or any part of it;
+   (c) reverse engineer, decompile or disassemble the Software, except to the
+       extent that law expressly permits it despite this restriction;
+   (d) remove or obscure any copyright, licence or attribution notice,
+       including this file and the notices beside it; or
+   (e) use Kloomiyin's names, logos or trade marks except to state factually
+       that you run Atelier.
+
+   Point (a) is the one that matters commercially: run it for your own
+   organisation freely, but do not become a competing Atelier host.
+
+4. NO SUPPORT AND NO COMMITMENT TO CONTINUE
+
+   The Software is provided without any obligation on Kloomiyin to supply
+   support, updates, bug fixes, or future versions. Kloomiyin may stop
+   publishing images at any time. Any support that is in fact provided is a
+   courtesy and creates no obligation to continue.
+
+5. NO WARRANTY
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE, TITLE AND NON-INFRINGEMENT.
+
+   You are responsible for how you deploy it: for securing the host, for
+   terminating TLS, for the strength and secrecy of the session secret, for
+   backups, and for whatever data you choose to put into it.
+
+6. LIMITATION OF LIABILITY
+
+   TO THE MAXIMUM EXTENT PERMITTED BY LAW, KLOOMIYIN SHALL NOT BE LIABLE FOR
+   ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL OR PUNITIVE DAMAGES, OR
+   FOR ANY LOSS OF PROFITS, REVENUE, DATA OR GOODWILL, ARISING OUT OF OR IN
+   CONNECTION WITH THE SOFTWARE, WHETHER IN CONTRACT, TORT OR OTHERWISE, AND
+   EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
+
+   KLOOMIYIN'S TOTAL AGGREGATE LIABILITY UNDER THIS AGREEMENT SHALL NOT EXCEED
+   THE GREATER OF (a) THE AMOUNT YOU PAID KLOOMIYIN FOR THE SOFTWARE IN THE
+   TWELVE MONTHS PRECEDING THE CLAIM, OR (b) FIFTY UNITED STATES DOLLARS.
+
+   Some jurisdictions do not allow the exclusion of certain warranties or the
+   limitation of certain liabilities. Where that is so, the exclusions and
+   limitations above apply to the fullest extent those jurisdictions permit,
+   and the rest of this agreement remains in force.
+
+7. TERMINATION
+
+   This licence ends automatically if you breach it. On termination you must
+   stop using the Software and delete the images you hold. Your own data is
+   unaffected — it is yours, and section 2 lets you keep your copies of it.
+   Sections 3(b)-(e), 5, 6 and 8 survive termination.
+
+8. GENERAL
+
+   This agreement is governed by the laws of the State of Delaware, United
+   States, without regard to its conflict-of-laws rules. If any provision is
+   held unenforceable, the rest remains in effect.
+
+   Questions, and requests for terms other than these — including hosting the
+   Software as a service — to: ben@kloomiyin.com

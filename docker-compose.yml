@@ -1,0 +1,102 @@
+# Atelier — self-hosted.
+#
+#   1. cp .env.example .env
+#   2. edit .env: set SESSION_SECRET and POSTGRES_PASSWORD to generated values
+#   3. docker compose up -d
+#   4. open http://localhost:3000 and sign up — the first account owns the workspace
+#
+# The image is published at ghcr.io/kloomiyin-inc/atelier and is built from a private
+# source repository; the licence terms are in /srv/licenses inside the image:
+#
+#   docker compose exec app cat licenses/EULA.txt
+#
+# For TLS, put a reverse proxy in front — see Caddyfile.example and the README. This file
+# deliberately binds the app to the loopback address, so nothing is exposed to your network
+# until you decide how it should be.
+
+name: atelier
+
+services:
+  app:
+    # Pinned on purpose. `latest` is convenient and makes an upgrade something that happens
+    # to you during an unrelated `docker compose up`; a version you edited is one you chose.
+    image: ghcr.io/kloomiyin-inc/atelier:1.6.0
+    environment:
+      PORT: 3000
+
+      # sslmode is in the URL rather than in code, so the connection path is identical here
+      # and on a managed Postgres that requires TLS (change it to sslmode=require there).
+      DATABASE_URL: postgres://atelier:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}@db:5432/atelier?sslmode=disable
+
+      # No default, on purpose. A shipped default would be the same secret on every
+      # deployment in the world, which is the same as having no session security at all.
+      # Generate one with: openssl rand -base64 48
+      SESSION_SECRET: ${SESSION_SECRET:?set SESSION_SECRET in .env — openssl rand -base64 48}
+
+      # Compose has no pre-deploy hook, so the migration runner executes at boot. It takes a
+      # Postgres advisory lock first, so several containers starting at once is safe: one
+      # migrates and the rest wait, then find nothing pending.
+      ATELIER_MIGRATE_ON_BOOT: "1"
+
+      # The address people actually reach, which is what goes into invitation and password
+      # reset links. Get this wrong and every invitation points somewhere useless.
+      APP_BASE_URL: ${APP_BASE_URL:-http://localhost:3000}
+
+      # Unset means no mail is sent: invitations and reset links are printed to
+      # `docker compose logs app` instead. Workable for a single operator, useless the
+      # moment you invite anybody — see the README.
+      SMTP_URL: ${SMTP_URL:-}
+      MAIL_FROM: ${MAIL_FROM:-Atelier <no-reply@atelier.local>}
+
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+
+      # Which hours, UTC, the nightly work runs at: retention purges and due-soon reminders.
+      ATELIER_JOB_HOURS: ${ATELIER_JOB_HOURS:-3,7}
+
+      # Largest single upload accepted, in bytes. Files live in Postgres, so this is also a
+      # statement about how fast your database grows.
+      ATELIER_MAX_BLOB_BYTES: ${ATELIER_MAX_BLOB_BYTES:-26214400}
+
+    # Loopback by default. Set APP_BIND=0.0.0.0 in .env only once something in front of it
+    # is terminating TLS — the app speaks plain HTTP and authenticates with a cookie.
+    ports: ["${APP_BIND:-127.0.0.1}:${APP_PORT:-3000}:3000"]
+
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  db:
+    image: postgres:17
+    environment:
+      POSTGRES_USER: atelier
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: atelier
+    # Not published to the host at all. `docker compose exec db psql -U atelier -d atelier`
+    # is how you get a shell on it; nothing outside this machine needs a route in.
+    volumes: ["pgdata:/var/lib/postgresql/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U atelier -d atelier"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+  # TLS, on the `tls` profile so it is opt-in:  docker compose --profile tls up -d
+  # Caddy gets a certificate from Let's Encrypt on its own, provided the DNS name in
+  # Caddyfile resolves here and ports 80 and 443 reach this machine.
+  caddy:
+    profiles: ["tls"]
+    image: caddy:2
+    ports: ["80:80", "443:443"]
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on: [app]
+    restart: unless-stopped
+
+volumes:
+  pgdata: {}
+  caddy_data: {}
+  caddy_config: {}
