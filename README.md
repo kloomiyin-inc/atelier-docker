@@ -30,16 +30,14 @@ docker compose up -d
 ```powershell
 curl.exe -O https://raw.githubusercontent.com/kloomiyin-inc/atelier-docker/main/docker-compose.yml
 
-$bytes = New-Object byte[] 36; [Security.Cryptography.RandomNumberGenerator]::Fill($bytes)
-$secret = [Convert]::ToBase64String($bytes)
-$bytes = New-Object byte[] 24; [Security.Cryptography.RandomNumberGenerator]::Fill($bytes)
-$dbpass = ($bytes | ForEach-Object { $_.ToString("x2") }) -join ""
+# Generated with the cryptographic RNG rather than Get-Random, and written with
+# WriteAllText rather than Set-Content: the latter writes CRLF, and a stray carriage
+# return inside the password lands in the middle of a postgres:// URL.
+$rng = [System.Security.Cryptography.RandomNumberGenerator]::Create()
+$b = [byte[]]::new(36); $rng.GetBytes($b); $secret = [Convert]::ToBase64String($b)
+$b = [byte[]]::new(24); $rng.GetBytes($b); $dbpass = ($b | ForEach-Object { $_.ToString("x2") }) -join ""
 
-@"
-SESSION_SECRET=$secret
-POSTGRES_PASSWORD=$dbpass
-APP_BASE_URL=http://localhost:3000
-"@ | Set-Content -Encoding ascii .env
+[IO.File]::WriteAllText("$PWD\.env", "SESSION_SECRET=$secret`nPOSTGRES_PASSWORD=$dbpass`nAPP_BASE_URL=http://localhost:3000`n")
 
 docker compose up -d
 ```
