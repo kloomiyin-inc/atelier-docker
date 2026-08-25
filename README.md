@@ -12,16 +12,42 @@ the other half — same product, its own identity and storage, nothing to do wit
 
 ```bash
 curl -O https://raw.githubusercontent.com/kloomiyin-inc/atelier-docker/main/docker-compose.yml
-curl -o .env https://raw.githubusercontent.com/kloomiyin-inc/atelier-docker/main/.env.example
 
-# Fill in the two secrets it refuses to start without. The password is hex rather than
-# base64 on purpose: it is interpolated into a postgres:// URL, and base64's "/" and "+"
-# corrupt one.
-sed -i "s|^SESSION_SECRET=.*|SESSION_SECRET=$(openssl rand -base64 48)|" .env
-sed -i "s|^POSTGRES_PASSWORD=.*|POSTGRES_PASSWORD=$(openssl rand -hex 24)|" .env
+# The two secrets it refuses to start without. The password is hex rather than base64
+# because it is interpolated into a postgres:// URL, and base64's "/" and "+" corrupt one.
+cat > .env <<EOF
+SESSION_SECRET=$(openssl rand -base64 48)
+POSTGRES_PASSWORD=$(openssl rand -hex 24)
+APP_BASE_URL=http://localhost:3000
+EOF
 
 docker compose up -d
 ```
+
+<details>
+<summary>Windows, in PowerShell</summary>
+
+```powershell
+curl.exe -O https://raw.githubusercontent.com/kloomiyin-inc/atelier-docker/main/docker-compose.yml
+
+$bytes = New-Object byte[] 36; [Security.Cryptography.RandomNumberGenerator]::Fill($bytes)
+$secret = [Convert]::ToBase64String($bytes)
+$bytes = New-Object byte[] 24; [Security.Cryptography.RandomNumberGenerator]::Fill($bytes)
+$dbpass = ($bytes | ForEach-Object { $_.ToString("x2") }) -join ""
+
+@"
+SESSION_SECRET=$secret
+POSTGRES_PASSWORD=$dbpass
+APP_BASE_URL=http://localhost:3000
+"@ | Set-Content -Encoding ascii .env
+
+docker compose up -d
+```
+
+</details>
+
+Everything else is optional and documented in
+[.env.example](.env.example) — email, the listening address, retention hours.
 
 Open <http://localhost:3000>. **The first account to sign up owns the workspace**, and signup
 closes behind it — everybody after that arrives by invitation. There is no seed script and no
@@ -148,8 +174,8 @@ The source repository is private. Every image is built by GitHub Actions from a 
 commit and carries a signed provenance attestation and an SBOM:
 
 ```bash
-gh attestation verify oci://ghcr.io/kloomiyin-inc/atelier:1.6.0 --owner kloomiyin-inc
-docker buildx imagetools inspect ghcr.io/kloomiyin-inc/atelier:1.6.0
+gh attestation verify oci://ghcr.io/kloomiyin-inc/atelier:1.7.0 --owner kloomiyin-inc
+docker buildx imagetools inspect ghcr.io/kloomiyin-inc/atelier:1.7.0
 ```
 
 ## Support

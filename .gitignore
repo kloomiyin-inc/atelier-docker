@@ -1,0 +1,11 @@
+# The quickstart's very first instruction is `cp .env.example .env`, and that file then holds
+# the session secret and the database password. Anyone who clones this repository to keep
+# their own deployment configuration in it would otherwise be one `git add -A` from
+# publishing both.
+.env
+
+# `Caddyfile.example` is renamed to this and given a real hostname.
+Caddyfile
+
+# Database dumps, if you follow the backup instructions from inside this directory.
+*.dump
