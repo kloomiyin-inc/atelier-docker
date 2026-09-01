@@ -20,7 +20,7 @@ services:
   app:
     # Pinned on purpose. `latest` is convenient and makes an upgrade something that happens
     # to you during an unrelated `docker compose up`; a version you edited is one you chose.
-    image: ghcr.io/kloomiyin-inc/atelier:1.7.0
+    image: ghcr.io/kloomiyin-inc/atelier:1.8.0
     environment:
       PORT: 3000
 

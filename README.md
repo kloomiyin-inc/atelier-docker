@@ -10,6 +10,28 @@ the other half — same product, its own identity and storage, nothing to do wit
 
 ## Run it
 
+The installer does everything below, with the checks a person doing it by hand skips —
+whether the Docker daemon is actually running, whether Compose is v2, and whether there is
+already a database here whose password a fresh `.env` would lock you out of.
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/kloomiyin-inc/atelier-docker/main/install.sh -o install.sh
+sh install.sh          # --dir <path> to install elsewhere, --yes to skip the prompt
+```
+
+```powershell
+# Windows, in PowerShell
+curl.exe -fsSL https://raw.githubusercontent.com/kloomiyin-inc/atelier-docker/main/install.ps1 -o install.ps1
+powershell -ExecutionPolicy Bypass -File .\install.ps1
+```
+
+Download and read it first rather than piping it to a shell. It installs licensed software
+and generates the two secrets your deployment's security rests on, and neither is a thing to
+run sight unseen.
+
+<details>
+<summary>Or do it by hand — the same steps</summary>
+
 ```bash
 curl -O https://raw.githubusercontent.com/kloomiyin-inc/atelier-docker/main/docker-compose.yml
 
@@ -44,6 +66,8 @@ docker compose up -d
 
 </details>
 
+</details>
+
 Everything else is optional and documented in
 [.env.example](.env.example) — email, the listening address, retention hours.
 
@@ -72,6 +96,65 @@ somebody else's inbox.
 invitations and reset links are written to `docker compose logs app` instead. That is
 deliberate, and fine while you are the only person here; the first person you invite simply
 never hears from the product. Any provider that speaks SMTP works.
+
+## Connecting an AI client
+
+Atelier speaks [MCP](https://modelcontextprotocol.io), so a client like Claude can read and
+write your workspace directly — pages as markdown, databases as rows, canvases as shapes.
+There is nothing to enable and no extra container: the endpoint is part of the app, at
+`/mcp`.
+
+What it needs is a token, because the endpoint deliberately does not accept the browser's
+session cookie:
+
+```bash
+docker compose exec app node server/scripts/admin.mjs token create you@example.com "claude"
+```
+
+That prints the token once — only its hash is stored, so a lost one is re-minted rather than
+recovered. Then point the client at it:
+
+```bash
+claude mcp add --transport http atelier http://localhost:3000/mcp \
+  --header "Authorization: Bearer atk_..."
+```
+
+or, as a config file:
+
+```json
+{
+  "mcpServers": {
+    "atelier": {
+      "type": "http",
+      "url": "http://localhost:3000/mcp",
+      "headers": { "Authorization": "Bearer atk_..." }
+    }
+  }
+}
+```
+
+**A token is the person it was minted for**, with exactly their access — no more, and no
+less. There are no read-only or scoped tokens yet, so mint it for an account whose access you
+are happy for an agent to have, and revoke it the moment you are not:
+
+```bash
+docker compose exec app node server/scripts/admin.mjs token list you@example.com
+docker compose exec app node server/scripts/admin.mjs token revoke you@example.com "claude"
+```
+
+Revocation takes effect on the next request; nothing is cached.
+
+**From another machine**, use the address the client can actually reach — the same one in
+`APP_BASE_URL`, through whatever is terminating TLS: `https://your.host/mcp`. The app binds to
+loopback by default, so a client on the same machine works as-is and a remote one does not
+until you have put a proxy in front (above). The token travels in a header, so use TLS.
+
+The same token also authenticates the HTTP API at `/api/<Controller>/<method>`, which is what
+anything scripted should use rather than pretending to be a browser.
+
+> **Getting a page of HTML back from `/mcp`?** Your image predates the endpoint. Upgrade the
+> tag in `docker-compose.yml` — versions before it served the app's own web page for that
+> address, which most clients report as a parse error rather than as a missing feature.
 
 ## Configuration
 
@@ -128,6 +211,14 @@ docker compose exec app node server/scripts/admin.mjs set-password you@example.c
 docker compose exec app node server/scripts/admin.mjs invite-link you@example.com
 ```
 
+It is also where API tokens come from — see [Connecting an AI client](#connecting-an-ai-client):
+
+```bash
+docker compose exec app node server/scripts/admin.mjs token create you@example.com "claude"
+docker compose exec app node server/scripts/admin.mjs token list you@example.com
+docker compose exec app node server/scripts/admin.mjs token revoke you@example.com "claude"
+```
+
 ## What you get
 
 Documents with a block editor — headings, lists, to-dos, callouts, toggles, tables, code,
@@ -136,7 +227,7 @@ properties, filters, sorts and saved views, shown as a table, board, calendar, t
 gallery or list. Tasks with subtasks three deep, repeats, reminders and a personal order.
 Flowcharts on a canvas, with swimlanes, auto-layout and SVG/PNG export. Comments, an inbox,
 an activity feed, presence, soft locks, search, file attachments, per-page sharing, and a
-trash that restores.
+trash that restores. An MCP endpoint, so an AI client can work in it alongside you.
 
 ## Known limits
 
@@ -172,8 +263,8 @@ The source repository is private. Every image is built by GitHub Actions from a 
 commit and carries a signed provenance attestation and an SBOM:
 
 ```bash
-gh attestation verify oci://ghcr.io/kloomiyin-inc/atelier:1.7.0 --owner kloomiyin-inc
-docker buildx imagetools inspect ghcr.io/kloomiyin-inc/atelier:1.7.0
+gh attestation verify oci://ghcr.io/kloomiyin-inc/atelier:1.8.0 --owner kloomiyin-inc
+docker buildx imagetools inspect ghcr.io/kloomiyin-inc/atelier:1.8.0
 ```
 
 ## Support
